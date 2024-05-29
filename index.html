@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualización de Sismos en Costa Rica</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.10/dist/vuetify.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script type="module" src="js/main.js"></script>
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-container>
+                <v-row>
+                    <v-col>
+                        <h1 class="titulo">Panel de Opciones</h1>
+                        <v-form>
+                            <v-select
+                                v-model="primerAno"
+                                :items="anos"
+                                label="Comparar por años (Primer Año)"
+                                outlined
+                            ></v-select>
+                            <v-select
+                                v-model="segundoAno"
+                                :items="anos"
+                                label="Comparar por años (Segundo Año)"
+                                outlined
+                            ></v-select>
+                            <v-radio-group v-model="riesgo" row>
+                                <v-radio label="Sí" value="si"></v-radio>
+                                <v-radio label="No" value="no"></v-radio>
+                            </v-radio-group>
+                            <v-select
+                                v-model="provincia"
+                                :items="provincias"
+                                label="Comparar por provincias"
+                                outlined
+                            ></v-select>
+                        </v-form>
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col>
+                        <v-text-field
+                            v-model="fecha"
+                            label="Fecha"
+                            type="date"
+                            outlined
+                        ></v-text-field>
+                        <v-btn @click="play">Play</v-btn>
+                        <v-btn @click="pause">Pause</v-btn>
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col>
+                        <h2 class="subtitulo">Frecuencia Sísmica</h2>
+                        <div id="grafico-frecuencia"></div>
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col>
+                        <h2 class="subtitulo">Mapa de Costa Rica</h2>
+                        <div id="mapa-sismos"></div>
+                    </v-col>
+                </v-row>
+                <v-row>
+                    <v-col>
+                        <h2 class="subtitulo">Gráfico de Magnitudes y Profundidades</h2>
+                        <div id="grafico-magnitudes"></div>
+                    </v-col>
+                </v-row>
+            </v-container>
+        </v-app>
+    </div>
+</body>
+</html>
+

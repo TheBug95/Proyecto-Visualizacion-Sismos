@@ -1,0 +1,30 @@
+body {
+    font-family: 'Sans Serif';
+}
+
+.panel-opciones, .panel-puesta-en-marcha, .frecuencia-sismica, .mapa {
+    margin: 20px;
+}
+
+.titulo {
+    text-align: center;
+    font-size: 24px;
+}
+
+.subtitulo {
+    text-align: center;
+    font-size: 18px;
+}
+
+.tooltip {
+    position: absolute;
+    text-align: center;
+    width: auto;
+    height: auto;
+    padding: 5px;
+    font: 12px sans-serif;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+    pointer-events: none;
+}
