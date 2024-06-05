@@ -3,8 +3,8 @@
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
 export function initMapaSismos() {
-    const width = 1200;
-    const height = 800;
+    const width = 550;
+    const height = 400;
 
     const svgMapa = d3.select("#mapa-sismos")
         .append("svg")

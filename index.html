@@ -13,69 +13,125 @@
 <body>
     <div id="app">
         <v-app>
-            <v-container>
-                <v-row>
-                    <v-col>
-                        <h1 class="titulo">Panel de Opciones</h1>
-                        <v-form>
-                            <v-select
-                                v-model="primerAno"
-                                :items="anos"
-                                label="Comparar por años (Primer Año)"
-                                outlined
-                            ></v-select>
-                            <v-select
-                                v-model="segundoAno"
-                                :items="anos"
-                                label="Comparar por años (Segundo Año)"
-                                outlined
-                            ></v-select>
-                            <v-radio-group v-model="riesgo" row>
-                                <v-radio label="Sí" value="si"></v-radio>
-                                <v-radio label="No" value="no"></v-radio>
-                            </v-radio-group>
-                            <v-select
-                                v-model="provincia"
-                                :items="provincias"
-                                label="Comparar por provincias"
-                                outlined
-                            ></v-select>
-                        </v-form>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col>
-                        <v-text-field
-                            v-model="fecha"
-                            label="Fecha"
-                            type="date"
-                            outlined
-                        ></v-text-field>
-                        <v-btn @click="play">Play</v-btn>
-                        <v-btn @click="pause">Pause</v-btn>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col>
-                        <h2 class="subtitulo">Frecuencia Sísmica</h2>
-                        <div id="grafico-frecuencia"></div>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col>
-                        <h2 class="subtitulo">Mapa de Costa Rica</h2>
-                        <div id="mapa-sismos"></div>
-                    </v-col>
-                </v-row>
-                <v-row>
-                    <v-col>
-                        <h2 class="subtitulo">Gráfico de Magnitudes y Profundidades</h2>
-                        <div id="grafico-magnitudes"></div>
-                    </v-col>
-                </v-row>
-            </v-container>
+            <v-container class="bg-surface-variant mb-6">
+                <v-card class="bg-surface-variant">
+                    <v-toolbar
+                    color="red"
+                    dark
+                    flat
+                  >
+                    <v-toolbar-title>Visualización Sismos en Costa Rica</v-toolbar-title>
+                  </v-toolbar>
+                  <v-card-text>
+                    <v-row justify="center">
+                        <v-col cols="4">
+                                    <v-hover>
+                                        <template v-slot:default="{ hover }">
+                                            <v-card :elevation="hover ? 6 : 2">
+                                                <v-card-text>
+                                                    <h2 class="text-h6 mb-2">Comparación de 2 años</h2>                             
+                                                        <v-select
+                                                            v-model="primerAno"
+                                                            :items="anos"
+                                                            label="Primer Año"
+                                                            
+                                                        ></v-select>
+                                                        <v-select
+                                                            v-model="segundoAno"
+                                                            :items="anos"
+                                                            label="Segundo Año"
+                                                            
+                                                        ></v-select>
+                                                </v-card-text>
+                                            </v-card>
+                                        </template>
+                                    </v-hover>
+                                </v-col>
+
+                                <v-col cols="4">
+                                    <v-hover>
+                                        <template v-slot:default="{ hover }">
+                                            <v-card :elevation="hover ? 6 : 2" class="d-flex align-center justify-center" height="300">
+                                                <v-card-text>
+                                                    <h2 class="text-h6 mb-2">Visualización por Provincias</h2>
+                                                    <v-chip-group v-model="provincia" selected-class="text-primary" mandatory>
+                                                        <v-row justify="center">
+                                                            <v-col>
+                                                                <v-chip v-for="(prov, index) in provincias.slice(0, 3)" :key="prov" :label="prov" :value="prov">{{ prov }}</v-chip>
+                                                            </v-col>
+                                                        </v-row>
+                                                    </v-chip-group>
+                                                    <v-chip-group v-model="provincia" selected-class="text-primary" mandatory></v-chip-group>
+                                                        <v-row justify="center">
+                                                            <v-col>
+                                                                <v-chip v-for="(prov, index) in provincias.slice(3, 7)" :key="prov" :label="prov" :value="prov">{{ prov }}</v-chip>
+                                                            </v-col>
+                                                        </v-row>
+                                                    </v-chip-group>
+                                                </v-card-text>
+                                            </v-card>
+                                        </template>
+                                    </v-hover>
+                                </v-col>
+                            </v-row>
+                     
+                        <v-row justify="center">
+                            <v-col cols="2">
+                                <v-label>Día:</v-label>
+                                <v-label>{{ dia }}</v-label>
+                            </v-col>
+                            <v-col cols="2">
+                                <v-label>Mes:</v-label>
+                                <v-label>{{ mes }}</v-label>
+                            </v-col>
+                            <v-col cols="2">
+                                <v-label>Año:</v-label>
+                                <v-label>{{ ano }}</v-label>
+                            </v-col>
+                        </v-row>
+
+                        <v-row justify="center">
+                            <v-col cols="1">
+                                <v-btn @click="playPause">{{ isPlaying ? 'Pause' : 'Play' }}</v-btn>
+                            </v-col>
+                            <v-col cols="8">
+                                <v-slider v-model="sliderValue" :max="totalDays" step="1" @input="onSliderChange"></v-slider>
+                            </v-col>
+                        </v-row>
+
+                        <v-row>
+                            <v-col cols="6">
+                                <v-card>
+                                    <v-card-text>
+                                        <h2 class="text-h6 mb-2">Mapa de Costa Rica</h2>
+                                        <div id="mapa-sismos"></div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                            <v-col cols="6">
+                                <v-card>
+                                    <v-card-text>
+                                        <h2 class="text-h6 mb-2">Gráfico de Magnitudes y Profundidades</h2>
+                                        <div id="grafico-magnitudes"></div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                            <v-col cols="2"></v-col>
+                        </v-row>
+                        <v-row justify="center">
+                            <v-col cols="8">
+                                <v-card>
+                                    <v-card-text>
+                                        <h2 class="text-h6 mb-2">Frecuencia Sísmica</h2>
+                                        <div id="grafico-frecuencia"></div>
+                                    </v-card-text>
+                                </v-card>
+                            </v-col>
+                        </v-row>
+                    </v-card-text>
+                </v-card>
+            </v-container> 
         </v-app>
     </div>
 </body>
 </html>
-
