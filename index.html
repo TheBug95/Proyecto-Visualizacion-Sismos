@@ -25,56 +25,55 @@
                   <v-card-text>
                     <v-row justify="center">
                         <v-col cols="4">
-                                    <v-hover>
-                                        <template v-slot:default="{ hover }">
-                                            <v-card :elevation="hover ? 6 : 2">
-                                                <v-card-text>
-                                                    <h2 class="text-h6 mb-2">Comparación de 2 años</h2>                             
-                                                        <v-select
-                                                            v-model="primerAno"
-                                                            :items="anos"
-                                                            label="Primer Año"
-                                                            
-                                                        ></v-select>
-                                                        <v-select
-                                                            v-model="segundoAno"
-                                                            :items="anos"
-                                                            label="Segundo Año"
-                                                            
-                                                        ></v-select>
-                                                </v-card-text>
-                                            </v-card>
-                                        </template>
-                                    </v-hover>
-                                </v-col>
+                            <v-hover>
+                                <template v-slot:default="{ hover }">
+                                    <v-card :elevation="hover ? 6 : 2">
+                                        <v-card-text>
+                                            <h2 class="text-h6 mb-2">Comparación de 2 años</h2>                             
+                                                <v-select
+                                                    v-model="primerAno"
+                                                    :items="anos"
+                                                    label="Primer Año"
+                                                    
+                                                ></v-select>
+                                                <v-select
+                                                    v-model="segundoAno"
+                                                    :items="anos"
+                                                    label="Segundo Año"
+                                                    
+                                                ></v-select>
+                                        </v-card-text>
+                                    </v-card>
+                                </template>
+                            </v-hover>
+                        </v-col>
 
-                                <v-col cols="4">
-                                    <v-hover>
-                                        <template v-slot:default="{ hover }">
-                                            <v-card :elevation="hover ? 6 : 2" class="d-flex align-center justify-center" height="300">
-                                                <v-card-text>
-                                                    <h2 class="text-h6 mb-2">Visualización por Provincias</h2>
-                                                    <v-chip-group v-model="provincia" selected-class="text-primary" mandatory>
-                                                        <v-row justify="center">
-                                                            <v-col>
-                                                                <v-chip v-for="(prov, index) in provincias.slice(0, 3)" :key="prov" :label="prov" :value="prov">{{ prov }}</v-chip>
-                                                            </v-col>
-                                                        </v-row>
-                                                    </v-chip-group>
-                                                    <v-chip-group v-model="provincia" selected-class="text-primary" mandatory></v-chip-group>
-                                                        <v-row justify="center">
-                                                            <v-col>
-                                                                <v-chip v-for="(prov, index) in provincias.slice(3, 7)" :key="prov" :label="prov" :value="prov">{{ prov }}</v-chip>
-                                                            </v-col>
-                                                        </v-row>
-                                                    </v-chip-group>
-                                                </v-card-text>
-                                            </v-card>
-                                        </template>
-                                    </v-hover>
-                                </v-col>
-                            </v-row>
-                     
+                        <v-col cols="4">
+                            <v-hover>
+                                <template v-slot:default="{ hover }">
+                                    <v-card :elevation="hover ? 6 : 2" class="d-flex align-center justify-center" height="300">
+                                        <v-card-text>
+                                            <h2 class="text-h6 mb-2">Visualización por Provincias</h2>
+                                            <v-chip-group v-model="provincia" selected-class="text-primary" mandatory>
+                                                <v-row justify="center">
+                                                    <v-col>
+                                                        <v-chip v-for="(prov, index) in provincias.slice(0, 3)" :key="prov" :label="prov" :value="prov">{{ prov }}</v-chip>
+                                                    </v-col>
+                                                </v-row>
+                                            <v-divider></v-divider>
+                                                <v-row justify="center">
+                                                    <v-col>
+                                                        <v-chip v-for="(prov, index) in provincias.slice(3, 7)" :key="prov" :label="prov" :value="prov">{{ prov }}</v-chip>
+                                                    </v-col>
+                                                </v-row>
+                                            </v-chip-group>
+                                        </v-card-text>
+                                    </v-card>
+                                </template>
+                            </v-hover>
+                        </v-col>
+                    </v-row>
+                
                         <v-row justify="center">
                             <v-col cols="2">
                                 <v-label>Día:</v-label>
