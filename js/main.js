@@ -1,7 +1,7 @@
 // main.js
 
 import { initGraficoFrecuencia } from './graficoFrecuencia.js';
-import { initMapaSismos } from './mapaSismos.js';
+import { initMapaSismos, drawSismos } from './mapaSismos.js';
 import { initGraficoMagnitudes } from './graficoMagnitudes.js';
 
 new Vue({
@@ -64,6 +64,16 @@ new Vue({
             this.sliderValue = value;
         },
         loadData() {
+            const width = 550;
+            const height = 400;
+            
+            this.projection = d3.geoMercator();
+
+            this.svgMapa = d3.select("#mapa-sismos")
+                                 .append("svg")
+                                 .attr("width", width)
+                                 .attr("height", height); 
+
             // Aquí cargaríamos los datos de los sismos desde el CSV
             d3.csv("data/sismos102original.csv").then(data => {
                 this.sismos = data.map(d => {
@@ -99,7 +109,8 @@ new Vue({
 
                 // Inicializar visualizaciones
                 initGraficoFrecuencia(this.sismos);
-                initMapaSismos(this.sismos);
+                initMapaSismos(this.svgMapa, width, height, this.projection);
+                drawSismos(this.sismos, this.svgMapa, this.projection);
                 initGraficoMagnitudes(this.sismos);
             });
         }
