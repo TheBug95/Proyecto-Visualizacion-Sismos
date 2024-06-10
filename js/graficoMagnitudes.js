@@ -2,6 +2,8 @@
 
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
+var timer;
+
 export function initGraficoMagnitudes(data, updateMapaSismos, pauseAnimation, resumeAnimation) {
     var width = 800, height = 700;
     var margin = { top: 50, right: 50, bottom: 50, left: 50 };
@@ -15,6 +17,20 @@ export function initGraficoMagnitudes(data, updateMapaSismos, pauseAnimation, re
         .append("g")
         .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+    // Añadir etiquetas a los ejes
+    svg.append("text")
+        .attr("class", "axis-label")
+        .attr("transform", `translate(-40, ${innerHeight / 4}) rotate(-90)`)
+        .attr("text-anchor", "middle")
+        .text("Magnitudes");
+
+    svg.append("text")
+        .attr("class", "axis-label")
+        .attr("transform", `translate(-40, ${innerHeight * 3 / 4}) rotate(-90)`)
+        .attr("text-anchor", "middle")
+        .text("Profundidades");
+
+
     updateGraficoMagnitudes(data, updateMapaSismos, pauseAnimation, resumeAnimation, svg, innerWidth, innerHeight);
 }
 
@@ -26,7 +42,6 @@ export function updateGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation,
     var innerHeight = height - margin.top - margin.bottom;
     var animationDuration = 1280000; // Duración de la animación por años en milisegundos
     var displayMonths = 12; // Número de meses a mostrar en la ventana visible
-    var timer; // Variable para almacenar el timer de d3
     var endDate; // Fecha final de los datos
     var currentDate; // Fecha actual de la animación
     var intervalTime; // Intervalo de tiempo entre cada paso de la animación
@@ -35,12 +50,9 @@ export function updateGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation,
     var totalAnimationDuration;
     
 
-    var svg = d3.select("#grafico-magnitudes")
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+    if (!svg) {
+        return;
+    }
 
     // Crear el tooltip
     var tooltip = createTooltip();
@@ -157,7 +169,7 @@ export function updateGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation,
             .attr("stroke", "black")
             .attr("stroke-width", 1)
             .on("mouseover", function(event, d) {
-                timer.stop(); // Detener la animación al hacer hover
+                if (timer) timer.stop(); // Detener la animación al hacer hover
                 var htmlContent = `Fecha: ${d.date_time.toDateString()}<br>Magnitud: ${d.magnitude}`;
                 showTooltip(tooltip, htmlContent, event);
             })
@@ -190,7 +202,7 @@ export function updateGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation,
             .attr("stroke", "black")
             .attr("stroke-width", 1)
             .on("mouseover", function(event, d) {
-                timer.stop(); // Detener la animación al hacer hover
+                if (timer) timer.stop(); // Detener la animación al hacer hover
                 var htmlContent = `Fecha: ${d.date_time.toDateString()}<br>Profundidad: ${d.depth}`;
                 showTooltip(tooltip, htmlContent, event);
             })
@@ -215,7 +227,7 @@ export function updateGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation,
         console.log("currentDate", currentDate);    
 
         if (currentDate > endDate) {
-            timer.stop();
+            if (timer) timer.stop();
             return;
         }
 
@@ -244,6 +256,7 @@ export function updateGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation,
 
         currentDate = startDate;
 
+        if (timer) timer.stop(); // Detener la animación si ya está en progreso
         timer = d3.interval(step, intervalTime);
     }
 

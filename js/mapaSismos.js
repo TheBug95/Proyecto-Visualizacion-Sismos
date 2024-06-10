@@ -1,5 +1,3 @@
-// mapaSismos.js
-
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
 var svgMapa, projection, tooltip;
@@ -12,6 +10,8 @@ export function initMapaSismos(sismos, pauseFunc, resumeFunc) {
     pauseAnimation = pauseFunc; // Asignar funciones de control de animación
     resumeAnimation = resumeFunc;
 
+    // Limpiar el mapa existente antes de volver a inicializar
+    d3.select("#mapa-sismos").selectAll("*").remove();
 
     svgMapa = d3.select("#mapa-sismos")
         .append("svg")
@@ -39,6 +39,8 @@ export function initMapaSismos(sismos, pauseFunc, resumeFunc) {
 export function updateMapaSismos(sismos) {
     if (!svgMapa || !projection || !tooltip) return; // Asegurarse de que todo está inicializado
 
+    svgMapa.selectAll("circle").remove();
+
     const circles = svgMapa.selectAll("circle")
         .data(sismos, d => d.fecha);
 
@@ -48,8 +50,8 @@ export function updateMapaSismos(sismos) {
         .append("circle")
         .attr("cx", d => projection([d.longitud, d.latitud])[0])
         .attr("cy", d => projection([d.longitud, d.latitud])[1])
-        .attr("r", d => d.magnitud * 2)
-        .attr("fill", "#fa5f49")
+        .attr("r", d => d.magnitud * 2.5)
+        .attr("fill", d => "#FF6961")
         .attr("fill-opacity", 0.6)
         .attr("stroke", "black")
         .attr("stroke-width", 1)
@@ -62,8 +64,8 @@ export function updateMapaSismos(sismos) {
         .merge(circles)
         .attr("cx", d => projection([d.longitud, d.latitud])[0])
         .attr("cy", d => projection([d.longitud, d.latitud])[1])
-        .attr("r", d => d.magnitud * 2)
-        .attr("fill", "#fa5f49")
+        .attr("r", d => d.magnitud * 2.5)
+        .attr("fill", d => "#FF6961")
         .attr("fill-opacity", 0.6)
         .attr("stroke", "black")
         .attr("stroke-width", 1);
