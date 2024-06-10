@@ -4,6 +4,15 @@ import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
 export function initGraficoFrecuencia(data) {
     var widthYM = 1700, heightYM = 825;
+    var svgYM = d3.select("#grafico-frecuencia").append("svg")
+        .attr("width", widthYM)
+        .attr("height", heightYM);
+
+    updateGraficoFrecuencia(data, svgYM);
+}
+
+export function updateGraficoFrecuencia(data, svgYM = null) {
+    var widthYM = 1700, heightYM = 825;
     var numYears = data.reduce((acc, curr) => acc.includes(curr.ano) ? acc : [...acc, curr.ano], []).length; // Número de años en los datos
     var cellHeight = (heightYM - 40) / 12; // Altura de cada celda considerando el espacio para el encabezado de los meses
     var yearWidth = (widthYM - 40) / numYears; // Ancho de cada celda para los años

@@ -1,8 +1,8 @@
 // main.js
 
-import { initGraficoFrecuencia } from './graficoFrecuencia.js';
+import { initGraficoFrecuencia, updateGraficoFrecuencia } from './graficoFrecuencia.js';
 import { initMapaSismos, updateMapaSismos } from './mapaSismos.js';
-import { initGraficoMagnitudes,  pauseAnimation, resumeAnimation } from './graficoMagnitudes.js';
+import { initGraficoMagnitudes, updateGraficoMagnitudes, pauseAnimation, resumeAnimation } from './graficoMagnitudes.js';
 
 new Vue({
     el: '#app',
@@ -113,10 +113,26 @@ new Vue({
                 this.filteredSismos = this.sismos.filter(d => d.ano >= this.primerAno && d.ano <= this.segundoAno);
 
                 // Inicializar visualizaciones con los datos filtrados
-                initGraficoFrecuencia(this.filteredSismos);
-                initMapaSismos(this.filteredSismos,  pauseAnimation, resumeAnimation);
-                initGraficoMagnitudes(this.filteredSismos, updateMapaSismos,  pauseAnimation, resumeAnimation);
+                updateGraficoFrecuencia(this.filteredSismos);
+                updateMapaSismos(this.filteredSismos,  pauseAnimation, resumeAnimation);
+                updateGraficoMagnitudes(this.filteredSismos, updateMapaSismos,  pauseAnimation, resumeAnimation);
             }
+        },
+        clearFilters() {
+            this.primerAno = null;
+            this.segundoAno = null;
+            this.dia = '';
+            this.mes = '';
+            this.ano = '';
+            this.sliderValue = 0;
+            this.isPlaying = false;
+            if (this.timer) {
+                clearInterval(this.timer);
+            }
+            // Reiniciar las visualizaciones
+            updateGraficoFrecuencia([]);
+            updateMapaSismos([], pauseAnimation, resumeAnimation);
+            updateGraficoMagnitudes([], updateMapaSismos, pauseAnimation, resumeAnimation);
         }
     },
     mounted() {

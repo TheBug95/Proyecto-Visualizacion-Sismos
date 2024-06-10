@@ -2,7 +2,24 @@
 
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
-export function initGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation, resumeAnimation) {
+export function initGraficoMagnitudes(data, updateMapaSismos, pauseAnimation, resumeAnimation) {
+    var width = 800, height = 700;
+    var margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    var innerWidth = width - margin.left - margin.right;
+    var innerHeight = height - margin.top - margin.bottom;
+
+    var svg = d3.select("#grafico-magnitudes")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .append("g")
+        .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+    updateGraficoMagnitudes(data, updateMapaSismos, pauseAnimation, resumeAnimation, svg, innerWidth, innerHeight);
+}
+
+
+export function updateGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation, resumeAnimation, svg = null, innerWidth = null, innerHeight = null) {
     var width = 800, height = 700;
     var margin = { top: 50, right: 50, bottom: 50, left: 50 };
     var innerWidth = width - margin.left - margin.right;
