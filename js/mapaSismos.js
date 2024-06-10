@@ -2,17 +2,24 @@
 
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
-export function initMapaSismos(sismos) {
-    const width = 550;
-    const height = 400;
+var svgMapa, projection, tooltip;
+var pauseAnimation, resumeAnimation;
 
-    const svgMapa = d3.select("#mapa-sismos")
+export function initMapaSismos(sismos, pauseFunc, resumeFunc) {
+    const width = 825;
+    const height = 700;
+
+    pauseAnimation = pauseFunc; // Asignar funciones de control de animación
+    resumeAnimation = resumeFunc;
+
+
+    svgMapa = d3.select("#mapa-sismos")
         .append("svg")
         .attr("width", width)
         .attr("height", height);
 
     d3.json("geojson/costa_rica.json").then(function(data) {
-        const projection = d3.geoMercator().fitSize([width, height], data);
+        projection = d3.geoMercator().fitSize([width, height], data);
         const path = d3.geoPath().projection(projection);
 
         svgMapa.selectAll("path")
@@ -23,22 +30,41 @@ export function initMapaSismos(sismos) {
             .attr("fill", "#ccc")
             .attr("stroke", "#333");
 
-        const tooltip = createTooltip();
+        tooltip = createTooltip();
 
-        svgMapa.selectAll("circle")
-            .data(sismos)
-            .enter()
-            .append("circle")
-            .attr("cx", d => projection([d.longitud, d.latitud])[0])
-            .attr("cy", d => projection([d.longitud, d.latitud])[1])
-            .attr("r", d => Math.sqrt(d.magnitud) * 2)
-            .attr("fill", "red")
-            .attr("opacity", 0.6)
-            .on("mouseover", function(event, d) {
-                showTooltip(tooltip, "Magnitud: " + d.magnitud + "<br>Fecha: " + d.fecha, event);
-            })
-            .on("mouseout", function(d) {
-                hideTooltip(tooltip);
-            });
+        updateMapaSismos(sismos); // Inicializar con los sismos actuales
     });
+}
+
+export function updateMapaSismos(sismos) {
+    if (!svgMapa || !projection || !tooltip) return; // Asegurarse de que todo está inicializado
+
+    const circles = svgMapa.selectAll("circle")
+        .data(sismos, d => d.fecha);
+
+    circles.exit().remove();
+
+    circles.enter()
+        .append("circle")
+        .attr("cx", d => projection([d.longitud, d.latitud])[0])
+        .attr("cy", d => projection([d.longitud, d.latitud])[1])
+        .attr("r", d => Math.sqrt(d.magnitud) * 2)
+        .attr("fill", "red")
+        .attr("fill-opacity", 0.6)
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .on("mouseover", function(event, d) {
+            showTooltip(tooltip, "Magnitud: " + d.magnitud + "<br>Fecha: " + d.fecha, event);
+        })
+        .on("mouseout", function() {
+            hideTooltip(tooltip);
+        })
+        .merge(circles)
+        .attr("cx", d => projection([d.longitud, d.latitud])[0])
+        .attr("cy", d => projection([d.longitud, d.latitud])[1])
+        .attr("r", d => Math.sqrt(d.magnitud) * 2)
+        .attr("fill", "red")
+        .attr("fill-opacity", 0.6)
+        .attr("stroke", "black")
+        .attr("stroke-width", 1);
 }

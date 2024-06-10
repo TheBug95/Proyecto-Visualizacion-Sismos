@@ -2,13 +2,21 @@
 
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
-export function initGraficoMagnitudes(data) {
-    var width = 800, height = 600;
+export function initGraficoMagnitudes(data, updateMapaSismos,  pauseAnimation, resumeAnimation) {
+    var width = 800, height = 700;
     var margin = { top: 50, right: 50, bottom: 50, left: 50 };
     var innerWidth = width - margin.left - margin.right;
     var innerHeight = height - margin.top - margin.bottom;
-    var animationDuration = 600000; // Duración de la animación total en milisegundos (5 minutos)
+    var animationDuration = 1280000; // Duración de la animación por años en milisegundos
     var displayMonths = 12; // Número de meses a mostrar en la ventana visible
+    var timer; // Variable para almacenar el timer de d3
+    var endDate; // Fecha final de los datos
+    var currentDate; // Fecha actual de la animación
+    var intervalTime; // Intervalo de tiempo entre cada paso de la animación
+    var stepRate = 0.1; // Tiempo entre cada paso de la animación en milisegundos
+    var first_year, last_year;
+    var totalAnimationDuration;
+    
 
     var svg = d3.select("#grafico-magnitudes")
         .append("svg")
@@ -30,10 +38,27 @@ export function initGraficoMagnitudes(data) {
     // Ordenar los datos por fecha
     data.sort((a, b) => d3.ascending(a.date_time, b.date_time));
 
+    // Filtrar datos para eliminar fechas anteriores a 1975
+    //data = data.filter(d => d.date_time >= new Date(1975, 0, 1));
+
+    first_year = data[0].ano;
+    last_year = data[data.length - 1].ano;
+
+    totalAnimationDuration = (last_year - first_year) + 1;
+
+
+    console.log("first_year", first_year);
+    console.log("last_year", last_year);
+    console.log("totalAnimationDuration", totalAnimationDuration);
+
+    // Verificar la extensión de los datos
+    var dateExtent = d3.extent(data, d => d.date_time);
+    console.log("Fecha mínima y máxima en los datos:", dateExtent);
+
     // Escalas
     var xScale = d3.scaleTime()
-        .domain(d3.extent(data, d => d.date_time))
-        .range([0, innerWidth * 3]); // Ampliar el rango para más separación entre meses
+        .domain([new Date(dateExtent[0]), currentDate]) // Asegurar que comience en 1975
+        .range([0, innerWidth]); // Ampliar el rango para más separación entre meses
 
     var yMagnitudeScale = d3.scaleLinear()
         .domain([0, d3.max(data, d => d.magnitude) || 1]) // evitar NaN si no hay datos
@@ -43,13 +68,13 @@ export function initGraficoMagnitudes(data) {
         .domain([0, d3.max(data, d => d.depth) || 1]) // evitar NaN si no hay datos
         .range([0, innerHeight / 2]);
 
-    var colorScaleMag = d3.scaleLinear()
+    var colorScaleMag = d3.scaleQuantize()
         .domain([d3.min(data, d => d.magnitude) || 0, d3.max(data, d => d.magnitude) || 1])
-        .range(["khaki", "red"]);
+        .range(["#77DD77", "#FFD700", "#FFB347", "#FF6961", "#fa5f49"]);
 
     var colorScaleDepth = d3.scaleLinear()
         .domain([d3.min(data, d => d.depth) || 0, d3.max(data, d => d.depth) || 1])
-        .range(["midnightblue", "lightcyan"]);
+        .range(["rgba(173, 216, 230, 0.6)", "rgba(148, 0, 211, 0.6)"]); // De azul claro a violeta claro pastel
 
     // Ejes
     var xAxis = d3.axisBottom(xScale).tickFormat(d3.timeFormat("%b-%Y")).ticks(d3.timeMonth.every(1));
@@ -78,6 +103,27 @@ export function initGraficoMagnitudes(data) {
 
     // Función de actualización de datos
     function update(data) {
+        var lines = svg.selectAll(".magnitude-depth-line")
+            .data(data, d => d.date_time);
+
+        lines.exit().remove();
+
+        lines.enter()
+            .append("line")
+            .attr("class", "magnitude-depth-line")
+            .attr("x1", d => xScale(d.date_time))
+            .attr("y1", d => yMagnitudeScale(d.magnitude) + d.magnitude * 2)
+            .attr("x2", d => xScale(d.date_time))
+            .attr("y2", d => innerHeight / 2 + yDepthScale(d.depth) - d.depth * 0.15)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
+            .merge(lines)
+            .attr("x1", d => xScale(d.date_time))
+            .attr("y1", d => yMagnitudeScale(d.magnitude) + d.magnitude * 2)
+            .attr("x2", d => xScale(d.date_time))
+            .attr("y2", d => innerHeight / 2 + yDepthScale(d.depth) - d.depth * 0.15)
+            .attr("stroke-width", 1);
+
         var circles = svg.selectAll(".quake-circle")
             .data(data, d => d.date_time);
 
@@ -88,20 +134,28 @@ export function initGraficoMagnitudes(data) {
             .attr("class", "quake-circle")
             .attr("cx", d => xScale(d.date_time))
             .attr("cy", d => yMagnitudeScale(d.magnitude))
-            .attr("r", 3)
+            .attr("r", d => d.magnitude * 2)
             .attr("fill", d => colorScaleMag(d.magnitude))
+            .attr("fill-opacity", 0.6)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
             .on("mouseover", function(event, d) {
+                timer.stop(); // Detener la animación al hacer hover
                 var htmlContent = `Fecha: ${d.date_time.toDateString()}<br>Magnitud: ${d.magnitude}`;
                 showTooltip(tooltip, htmlContent, event);
             })
             .on("mouseout", function() {
                 hideTooltip(tooltip);
+                timer = d3.interval(step, intervalTime); // Reanudar la animación al salir del hover
             })
             .merge(circles)
             .attr("cx", d => xScale(d.date_time))
             .attr("cy", d => yMagnitudeScale(d.magnitude))
-            .attr("r", 3)
-            .attr("fill", d => colorScaleMag(d.magnitude));
+            .attr("r", d => d.magnitude * 2)
+            .attr("fill", d => colorScaleMag(d.magnitude))
+            .attr("fill-opacity", 0.6)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
 
         var depthCircles = svg.selectAll(".depth-circle")
             .data(data, d => d.date_time);
@@ -113,51 +167,77 @@ export function initGraficoMagnitudes(data) {
             .attr("class", "depth-circle")
             .attr("cx", d => xScale(d.date_time))
             .attr("cy", d => innerHeight / 2 + yDepthScale(d.depth)) // Ajuste para eje Y negativo
-            .attr("r", 3)
+            .attr("r", d => d.depth * 0.15)
             .attr("fill", d => colorScaleDepth(d.depth))
+            .attr("fill-opacity", 0.6)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1)
             .on("mouseover", function(event, d) {
+                timer.stop(); // Detener la animación al hacer hover
                 var htmlContent = `Fecha: ${d.date_time.toDateString()}<br>Profundidad: ${d.depth}`;
                 showTooltip(tooltip, htmlContent, event);
             })
             .on("mouseout", function() {
                 hideTooltip(tooltip);
+                timer = d3.interval(step, intervalTime); // Reanudar la animación
             })
             .merge(depthCircles)
             .attr("cx", d => xScale(d.date_time))
             .attr("cy", d => innerHeight / 2 + yDepthScale(d.depth))
-            .attr("r", 3)
-            .attr("fill", d => colorScaleDepth(d.depth));
+            .attr("r", d => d.depth * 0.15)
+            .attr("fill", d => colorScaleDepth(d.depth))
+            .attr("fill-opacity", 0.6)
+            .attr("stroke", "black")
+            .attr("stroke-width", 1);
+
+        updateMapaSismos(data); // Actualizar el mapa con los datos actuales
+    }
+
+    function step() {
+        currentDate = d3.timeHour.offset(currentDate, 18);
+        console.log("currentDate", currentDate);    
+
+        if (currentDate > endDate) {
+            timer.stop();
+            return;
+        }
+
+        // Actualizar día, mes y año en la interfaz de usuario
+        var vueInstance = document.querySelector('#app').__vue__;
+        vueInstance.dia = currentDate.getDate();
+        vueInstance.mes = currentDate.getMonth() + 1; // Los meses en JavaScript son 0-11
+        vueInstance.ano = currentDate.getFullYear();
+
+        var displayData = data.filter(d => d.date_time <= currentDate && d.date_time >= d3.timeMonth.offset(currentDate, -2));
+        update(displayData);
+
+        // Desplazar el dominio de la escala X para mantener el efecto de "cinta caminadora"
+        var start = d3.timeMonth.offset(currentDate, -2);
+        xScale.domain([start, currentDate]);
+        xAxisGroup.call(xAxis);
     }
 
     // Función para iniciar la animación
     function animateData() {
-        var startDate = data[0].date_time;
-        var endDate = data[data.length - 1].date_time;
+        var startDate = new Date(dateExtent[0]);
+        endDate = new Date(dateExtent[1]);
+        console.log("startDate", startDate);    
         var totalDays = d3.timeDay.count(startDate, endDate);
-        var intervalTime = animationDuration / totalDays;
+        intervalTime = (totalAnimationDuration * animationDuration) / (totalDays / stepRate); // Ajustar el intervalo de tiempo para cada paso
 
-        var currentDate = startDate;
-        var index = 0;
+        currentDate = startDate;
 
-        function step() {
-            currentDate = d3.timeDay.offset(currentDate, 1);
-
-            if (currentDate > endDate) {
-                clearInterval(interval);
-                return;
-            }
-
-            var displayData = data.filter(d => d.date_time <= currentDate && d.date_time >= d3.timeMonth.offset(currentDate, -displayMonths));
-            update(displayData);
-
-            xScale.domain([d3.timeMonth.offset(currentDate, -displayMonths), currentDate]);
-            xAxisGroup.call(xAxis);
-
-            index++;
-        }
-
-        var interval = setInterval(step, intervalTime);
+        timer = d3.interval(step, intervalTime);
     }
 
     animateData();
+}
+
+// Pausar y reanudar la animación
+export function pauseAnimation() {
+    if (timer) timer.stop();
+}
+
+export function resumeAnimation() {
+    if (!timer) timer = d3.interval(step, intervalTime);
 }

@@ -3,10 +3,10 @@
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
 export function initGraficoFrecuencia(data) {
-    var widthYM = 1000, heightYM = 1000;
+    var widthYM = 1700, heightYM = 825;
     var numYears = data.reduce((acc, curr) => acc.includes(curr.ano) ? acc : [...acc, curr.ano], []).length; // Número de años en los datos
-    var yearHeight = (heightYM - 40) / numYears; // Altura de cada celda para los años
-    var cellWidth = (widthYM - 40) / 12; // Ancho de cada celda considerando el espacio para el encabezado de los meses
+    var cellHeight = (heightYM - 40) / 12; // Altura de cada celda considerando el espacio para el encabezado de los meses
+    var yearWidth = (widthYM - 40) / numYears; // Ancho de cada celda para los años
 
     var svgYM = d3.select("#grafico-frecuencia")
         .append("svg")
@@ -86,15 +86,15 @@ export function initGraficoFrecuencia(data) {
 
     var gYearMonth = svgYM.selectAll("g.year-group").data(nestedByYearMonth).enter().append("g").attr("class", "year-group");
 
-    // Añadir recuadros y texto para años
+    // Añadir recuadros y texto para años (horizontal)
     var yearGroups = gYearMonth.append("g")
         .attr("class", "year-rect-text");
 
     yearGroups.append("rect")
-        .attr("x", 0)
-        .attr("y", (d, i) => 40 + i * yearHeight)
-        .attr("width", 40)
-        .attr("height", yearHeight)
+        .attr("x", (d, i) => 40 + i * yearWidth)
+        .attr("y", 0)
+        .attr("width", yearWidth)
+        .attr("height", 40)
         .attr("fill", d => colorScaleYear(d3.sum(d.values, v => v.value.count)))
         .on("mouseover", function(event, d) {
             var htmlContent = `Año: ${d.key}<br>Frecuencia Total: ${d3.sum(d.values, v => v.value.count)}`;
@@ -105,15 +105,15 @@ export function initGraficoFrecuencia(data) {
         });
 
     yearGroups.append("text")
-        .attr("x", 20)
-        .attr("y", (d, i) => 40 + i * yearHeight + yearHeight / 2)
+        .attr("x", (d, i) => 40 + i * yearWidth + yearWidth / 2)
+        .attr("y", 20)
         .attr("font-size", "12px")
         .attr("text-anchor", "middle")
         .attr("dominant-baseline", "middle")
         .attr("fill", "#000")
         .text(d => d.key);
 
-    // Añadir recuadros y texto para meses
+    // Añadir recuadros y texto para meses (vertical)
     svgYM.selectAll(".month-group")
         .data(months)
         .enter()
@@ -122,10 +122,10 @@ export function initGraficoFrecuencia(data) {
         .each(function(month, i) {
             d3.select(this)
                 .append("rect")
-                .attr("x", 40 + i * cellWidth)
-                .attr("y", 0)
-                .attr("width", cellWidth)
-                .attr("height", 40)
+                .attr("x", 0)
+                .attr("y", 40 + i * cellHeight)
+                .attr("width", 40)
+                .attr("height", cellHeight)
                 .attr("fill", () => {
                     const totalMonthCount = nestedByYearMonth.reduce((acc, year) => {
                         const monthData = year.values.find(m => m.key === (i + 1));
@@ -148,8 +148,8 @@ export function initGraficoFrecuencia(data) {
             d3.select(this)
                 .append("text")
                 .attr("text-anchor", "middle")
-                .attr("x", 40 + i * cellWidth + cellWidth / 2)
-                .attr("y", 20)
+                .attr("x", 20)
+                .attr("y", 40 + i * cellHeight + cellHeight / 2)
                 .attr("font-size", "12px")
                 .attr("dominant-baseline", "middle")
                 .attr("fill", "#000")
@@ -163,13 +163,13 @@ export function initGraficoFrecuencia(data) {
         .append("g")
         .attr("class", "month-rect")
         .append("rect")
-        .attr("x", (d, i) => 40 + i * cellWidth)
-        .attr("y", function(d, i, nodes) {
+        .attr("x", function(d, i, nodes) {
             var yearIndex = nestedByYearMonth.findIndex(year => year.key === d3.select(this.parentNode.parentNode).datum().key);
-            return 40 + yearIndex * yearHeight;
+            return 40 + yearIndex * yearWidth;
         })
-        .attr("width", cellWidth)
-        .attr("height", yearHeight)
+        .attr("y", (d, i) => 40 + i * cellHeight)
+        .attr("width", yearWidth)
+        .attr("height", cellHeight)
         .attr("fill", d => d.value.count > 0 ? colorScaleMonth(d.value.count) : "none")
         .on("mouseover", function(event, d) {
             var year = d3.select(this.parentNode.parentNode).datum().key;
