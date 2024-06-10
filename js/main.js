@@ -1,8 +1,8 @@
 // main.js
 
 import { initGraficoFrecuencia } from './graficoFrecuencia.js';
-import { initMapaSismos } from './mapaSismos.js';
-import { initGraficoMagnitudes } from './graficoMagnitudes.js';
+import { initMapaSismos, updateMapaSismos } from './mapaSismos.js';
+import { initGraficoMagnitudes,  pauseAnimation, resumeAnimation } from './graficoMagnitudes.js';
 
 new Vue({
     el: '#app',
@@ -22,7 +22,8 @@ new Vue({
         totalDays: 365,
         anos: [1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022],
         provincias: ['San José', 'Alajuela', 'Cartago', 'Heredia', 'Guanacaste', 'Puntarenas', 'Limón'],
-        sismos: [] // Aquí cargaremos los datos de sismos
+        sismos: [], // Aquí cargaremos los datos de sismos
+        filteredSismos: [] // Datos filtrados
     },
     watch: {
         fecha(newFecha) {
@@ -41,6 +42,12 @@ new Vue({
             const startDate = new Date(this.ano, 0, 1);
             const newDate = new Date(startDate.setDate(newValue));
             this.fecha = newDate.toISOString().substring(0, 10);
+        },
+        primerAno() {
+            this.filterData();
+        },
+        segundoAno() {
+            this.filterData();
         }
     },
     methods: {
@@ -98,10 +105,18 @@ new Vue({
                 console.log("Datos transformados:", this.sismos);
 
                 // Inicializar visualizaciones
-                initGraficoFrecuencia(this.sismos);
-                initMapaSismos(this.sismos);
-                initGraficoMagnitudes(this.sismos);
+                this.filterData();
             });
+        },
+        filterData() {
+            if (this.primerAno && this.segundoAno) {
+                this.filteredSismos = this.sismos.filter(d => d.ano >= this.primerAno && d.ano <= this.segundoAno);
+
+                // Inicializar visualizaciones con los datos filtrados
+                initGraficoFrecuencia(this.filteredSismos);
+                initMapaSismos(this.filteredSismos,  pauseAnimation, resumeAnimation);
+                initGraficoMagnitudes(this.filteredSismos, updateMapaSismos,  pauseAnimation, resumeAnimation);
+            }
         }
     },
     mounted() {
