@@ -1,17 +1,23 @@
-// graficoFrecuencia.js
-
 import { createTooltip, showTooltip, hideTooltip } from './utils.js';
 
 export function initGraficoFrecuencia(data) {
+    var widthYM = 1700, heightYM = 825;
+    var svgYM = d3.select("#grafico-frecuencia").append("svg")
+        .attr("width", widthYM)
+        .attr("height", heightYM);
+
+    updateGraficoFrecuencia(data, svgYM);
+}
+
+export function updateGraficoFrecuencia(data, svgYM = null) {
     var widthYM = 1700, heightYM = 825;
     var numYears = data.reduce((acc, curr) => acc.includes(curr.ano) ? acc : [...acc, curr.ano], []).length; // Número de años en los datos
     var cellHeight = (heightYM - 40) / 12; // Altura de cada celda considerando el espacio para el encabezado de los meses
     var yearWidth = (widthYM - 40) / numYears; // Ancho de cada celda para los años
 
-    var svgYM = d3.select("#grafico-frecuencia")
-        .append("svg")
-        .attr("width", widthYM)
-        .attr("height", heightYM);
+    if (!svgYM) {
+        return
+    }
 
     // Crear el tooltip
     var tooltip = createTooltip();
@@ -40,8 +46,6 @@ export function initGraficoFrecuencia(data) {
         })
     );
 
-    console.log("Datos agrupados por año y mes:", nestedByYearMonth);
-
     nestedByYearMonth.sort((a, b) => d3.ascending(a.key, b.key));
     for (var i = 0; i < nestedByYearMonth.length; i++) {
         nestedByYearMonth[i].values.sort((a, b) => d3.ascending(+a.key, +b.key));
@@ -50,7 +54,9 @@ export function initGraficoFrecuencia(data) {
     var minMonthlyMagnitude = d3.min(nestedByYearMonth, d => d3.min(d.values, d => d.value.count));
     var maxMonthlyMagnitude = d3.max(nestedByYearMonth, d => d3.max(d.values, d => d.value.count));
 
-    console.log("nestedByYearMonth", nestedByYearMonth);
+    var minYearlyCount = d3.min(nestedByYearMonth, d => d3.sum(d.values, v => v.value.count));
+    var maxYearlyCount = d3.max(nestedByYearMonth, d => d3.sum(d.values, v => v.value.count));
+
 
     var colorScaleMonth = d3.scaleLinear()
         .domain([
@@ -68,6 +74,20 @@ export function initGraficoFrecuencia(data) {
 
     var colorScaleYear = d3.scaleLinear()
         .domain([
+            minYearlyCount,
+            minYearlyCount + 1,
+            maxYearlyCount / 10,
+            maxYearlyCount / 5,
+            maxYearlyCount / 3,
+            maxYearlyCount / 2,
+            maxYearlyCount / 1.35,
+            maxYearlyCount
+        ])
+        .range(["#FFFFFF", "#95fab9", "#77DD77", "#FFFD77", "#FFD700", "#FFB347", "#FF6961", "#fa5f49"])
+        .interpolate(d3.interpolateHcl);
+
+    var colorScaleMonthPerYear = d3.scaleLinear()
+        .domain([
             minMonthlyMagnitude,
             minMonthlyMagnitude + 1,
             maxMonthlyMagnitude / 10,
@@ -81,7 +101,6 @@ export function initGraficoFrecuencia(data) {
         .interpolate(d3.interpolateHcl);
 
     var years = nestedByYearMonth.map(d => +d.key);
-    console.log("years", years);
     var months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
     var gYearMonth = svgYM.selectAll("g.year-group").data(nestedByYearMonth).enter().append("g").attr("class", "year-group");
@@ -170,7 +189,7 @@ export function initGraficoFrecuencia(data) {
         .attr("y", (d, i) => 40 + i * cellHeight)
         .attr("width", yearWidth)
         .attr("height", cellHeight)
-        .attr("fill", d => d.value.count > 0 ? colorScaleMonth(d.value.count) : "none")
+        .attr("fill", d => d.value.count > 0 ? colorScaleMonthPerYear(d.value.count) : "none")
         .on("mouseover", function(event, d) {
             var year = d3.select(this.parentNode.parentNode).datum().key;
             var htmlContent = `Año: ${year}<br>Mes: ${months[d.key - 1]}<br>Cantidad de Sismos: ${d.value.count}<br>Magnitud Mínima: ${d.value.minMag}<br>Magnitud Máxima: ${d.value.maxMag}`;

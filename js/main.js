@@ -1,8 +1,8 @@
 // main.js
 
-import { initGraficoFrecuencia } from './graficoFrecuencia.js';
+import { initGraficoFrecuencia, updateGraficoFrecuencia } from './graficoFrecuencia.js';
 import { initMapaSismos, updateMapaSismos } from './mapaSismos.js';
-import { initGraficoMagnitudes,  pauseAnimation, resumeAnimation } from './graficoMagnitudes.js';
+import { initGraficoMagnitudes, updateGraficoMagnitudes, pauseAnimation, resumeAnimation } from './graficoMagnitudes.js';
 
 new Vue({
     el: '#app',
@@ -56,16 +56,19 @@ new Vue({
                 clearInterval(this.timer);
                 this.isPlaying = false;
             } else {
-                this.timer = setInterval(() => {
-                    if (this.sliderValue < this.totalDays) {
-                        this.sliderValue += 1;
-                    } else {
-                        clearInterval(this.timer);
-                        this.isPlaying = false;
-                    }
-                }, 1000); // Intervalo de 1 segundo
+                this.startAnimation();
                 this.isPlaying = true;
             }
+        },
+        startAnimation() {
+            this.timer = setInterval(() => {
+                if (this.sliderValue < this.totalDays) {
+                    this.sliderValue += 1;
+                } else {
+                    clearInterval(this.timer);
+                    this.isPlaying = false;
+                }
+            }, 1000); // Intervalo de 1 segundo
         },
         onSliderChange(value) {
             this.sliderValue = value;
@@ -106,17 +109,56 @@ new Vue({
 
                 // Inicializar visualizaciones
                 this.filterData();
+
+                // Inicializar visualizaciones con los datos filtrados
+                /*initGraficoFrecuencia([]);
+                initMapaSismos([],  pauseAnimation, resumeAnimation);
+                initGraficoMagnitudes([],  pauseAnimation, resumeAnimation);*/
             });
         },
         filterData() {
             if (this.primerAno && this.segundoAno) {
                 this.filteredSismos = this.sismos.filter(d => d.ano >= this.primerAno && d.ano <= this.segundoAno);
+                console.log("Datos filtrados:", this.filteredSismos);
+
+                // Limpiar gráficos existentes
+                this.clearVisualizations();
 
                 // Inicializar visualizaciones con los datos filtrados
                 initGraficoFrecuencia(this.filteredSismos);
-                initMapaSismos(this.filteredSismos,  pauseAnimation, resumeAnimation);
-                initGraficoMagnitudes(this.filteredSismos, updateMapaSismos,  pauseAnimation, resumeAnimation);
+                initMapaSismos(this.filteredSismos, pauseAnimation, resumeAnimation);
+                initGraficoMagnitudes(this.filteredSismos, updateMapaSismos, pauseAnimation, resumeAnimation);
             }
+        },
+        clearVisualizations() {
+            // Detener la animación
+            if (this.timer) {
+                timer.stop();
+            }
+            this.isPlaying = false;
+            this.sliderValue = 0;
+
+            // Eliminar gráficos existentes
+            d3.select("#grafico-frecuencia").selectAll("*").remove();
+            d3.select("#mapa-sismos").selectAll("*").remove();
+            d3.select("#grafico-magnitudes").selectAll("*").remove();
+        },
+        clearFilters() {
+            // Limpiar los datos y gráficos
+            this.primerAno = null;
+            this.segundoAno = null;
+            this.filteredSismos = [];
+            this.dia = '';
+            this.mes = '';
+            this.ano = '';
+
+            // Limpiar las visualizaciones
+            this.clearVisualizations();
+
+            this.dia = '';
+            this.mes = '';
+            this.ano = '';
+            this.fecha = null;
         }
     },
     mounted() {
